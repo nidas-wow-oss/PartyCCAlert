@@ -38,6 +38,7 @@ local DEFAULTS = {
     silences = true,
     scale = 1,
     timerFont = "continuum",
+    bgAlpha = 0.55,
 }
 
 local COLORS = {
@@ -145,6 +146,10 @@ local function TimerFontIndex()
         if t.key == PartyCCAlertDB.timerFont then return i end
     end
     return 1
+end
+
+local function ApplyBgAlpha()
+    for _, f in pairs(alerts) do f.bg:SetTexture(0, 0, 0, PartyCCAlertDB.bgAlpha) end
 end
 
 local function ApplyTimerFont()
@@ -270,7 +275,7 @@ ev:SetScript("OnEvent", function(self, event, arg1)
             PartyCCAlertDB.timerFont = nil
             PartyCCAlertDB.fontV2 = true
         end
-        for _, k in ipairs({ "sound", "casts", "silences", "scale", "timerFont" }) do
+        for _, k in ipairs({ "sound", "casts", "silences", "scale", "timerFont", "bgAlpha" }) do
             if PartyCCAlertDB[k] == nil then PartyCCAlertDB[k] = DEFAULTS[k] end
         end
         if not COLORS[PartyCCAlertDB.color or ""] then PartyCCAlertDB.color = DEFAULT_COLOR end
@@ -288,6 +293,7 @@ ev:SetScript("OnEvent", function(self, event, arg1)
         ApplyPosition(alerts.party2)
         ApplyColor()
         ApplyTimerFont()
+        ApplyBgAlpha()
         self:RegisterEvent("UNIT_AURA")
         self:RegisterEvent("PARTY_MEMBERS_CHANGED")
         self:RegisterEvent("RAID_ROSTER_UPDATE")
@@ -389,7 +395,7 @@ end
 
 local function CreateMenu()
     local m = CreateFrame("Frame", "PartyCCAlertMenu", UIParent)
-    m:SetSize(250, 320)
+    m:SetSize(250, 376)
     m:SetPoint("CENTER")
     m:SetFrameStrata("DIALOG")
     m:SetClampedToScreen(true)
@@ -473,11 +479,31 @@ local function CreateMenu()
         sVal:SetText(WHITE .. string.format("%.2f", v) .. R)
     end
 
+    local o = CreateFrame("Slider", "PartyCCAlertMenuAlpha", m, "OptionsSliderTemplate")
+    o:SetPoint("TOPLEFT", 30, -264)
+    o:SetWidth(190)
+    o:SetHeight(14)
+    o:SetMinMaxValues(0, 1)
+    o:SetValueStep(0.05)
+    local oTitle = PartyCCAlertMenuAlphaText
+    oTitle:ClearAllPoints()
+    oTitle:SetPoint("BOTTOM", o, "TOP", 0, 1)
+    oTitle:SetFont(FONT, 11, "")
+    oTitle:SetText(HDR .. "Background opacity" .. R)
+    PartyCCAlertMenuAlphaLow:SetText(GRAY .. "0%" .. R)
+    PartyCCAlertMenuAlphaHigh:SetText(GRAY .. "100%" .. R)
+    local oVal = o:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    oVal:SetPoint("TOP", o, "BOTTOM", 0, -1)
+    oVal:SetFont(FONT, 12, "")
+    local function AlphaText(v)
+        oVal:SetText(WHITE .. string.format("%d%%", v * 100 + 0.5) .. R)
+    end
+
     local fontBtn
     local function FontText()
         fontBtn:SetLabel("Timer font: " .. TIMER_FONTS[TimerFontIndex()].label, false)
     end
-    fontBtn = Btn(m, 16, -250, 218, 22, function()
+    fontBtn = Btn(m, 16, -306, 218, 22, function()
         local i = TimerFontIndex() % #TIMER_FONTS + 1
         PartyCCAlertDB.timerFont = TIMER_FONTS[i].key
         ApplyTimerFont()
@@ -488,7 +514,7 @@ local function CreateMenu()
     local function MoveText()
         move:SetLabel(unlocked and "Lock" or "Test / Move", unlocked)
     end
-    move = Btn(m, 16, -280, 218, 24, function()
+    move = Btn(m, 16, -336, 218, 24, function()
         SetUnlocked(not unlocked)
         MoveText()
     end)
@@ -504,6 +530,15 @@ local function CreateMenu()
             PartyCCAlertDB.scale = v
             ScaleText(v)
             for _, f in pairs(alerts) do ApplyPosition(f) end
+        end)
+        o:SetScript("OnValueChanged", nil)
+        o:SetValue(PartyCCAlertDB.bgAlpha)
+        AlphaText(PartyCCAlertDB.bgAlpha)
+        o:SetScript("OnValueChanged", function(self, v)
+            v = math.floor(v * 20 + 0.5) / 20
+            PartyCCAlertDB.bgAlpha = v
+            AlphaText(v)
+            ApplyBgAlpha()
         end)
         RefreshColors()
         FontText()

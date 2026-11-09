@@ -6,7 +6,7 @@ A big alert in the middle of the screen when **party1** or **party2** is crowd-c
 
 It also warns you **before** the CC lands: when an enemy is casting Fear, Seduction, Polymorph, Cyclone and similar spells on a party member, the alert shows up in yellow with **INCOMING** and the cast countdown.
 
-![PartyCCAlert alerts and options](images/menu.png)
+![PartyCCAlert alerts and options](https://raw.githubusercontent.com/nidas-wow-oss/PartyCCAlert/assets/menu.png)
 
 ## Features
 
@@ -14,15 +14,17 @@ It also warns you **before** the CC lands: when an enemy is casting Fear, Seduct
 - Incoming CC warning for cast-time CCs: Fear, Seduction, Polymorph, Hex, Cyclone, Hibernate, Banish, Mind Control, Turn Evil, Shackle Undead and Scare Beast.
 - Shows the strongest CC when there is more than one, with a cooldown spiral and countdown.
 - Sound when an alert appears (optional).
-- Border color, scale and countdown font can be changed.
+- Border color, scale, background opacity and countdown font can be changed.
 - Movable alerts, one per party member.
 - Works in any client language.
 
 ## Installation
 
-1. Download this repository (**Code → Download ZIP**).
-2. Copy the `PartyCCAlert` folder into `World of Warcraft/Interface/AddOns/`.
+1. Download **PartyCCAlert.zip** from [Releases](https://github.com/nidas-wow-oss/PartyCCAlert/releases/latest).
+2. Extract it into `World of Warcraft/Interface/AddOns/` (you get a `PartyCCAlert` folder).
 3. Make sure **PartyCCAlert** is enabled in the AddOns list on the character select screen.
+
+If you use **Code → Download ZIP** instead, rename the folder from `PartyCCAlert-main` to `PartyCCAlert`.
 
 ## Usage
 

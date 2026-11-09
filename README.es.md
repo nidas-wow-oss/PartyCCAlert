@@ -6,7 +6,7 @@ Una alerta grande en el centro de la pantalla cuando **party1** o **party2** est
 
 También avisa **antes** de que llegue el CC: cuando un enemigo le está casteando Miedo, Seducción, Polimorfia, Ciclón y hechizos parecidos a un miembro del grupo, la alerta aparece en amarillo con **INCOMING** y la cuenta regresiva del casteo.
 
-![Alertas y opciones de PartyCCAlert](images/menu.png)
+![Alertas y opciones de PartyCCAlert](https://raw.githubusercontent.com/nidas-wow-oss/PartyCCAlert/assets/menu.png)
 
 ## Funciones
 
@@ -14,15 +14,17 @@ También avisa **antes** de que llegue el CC: cuando un enemigo le está castean
 - Aviso de CC entrante para los CC con casteo: Miedo, Seducción, Polimorfia, Maleficio, Ciclón, Hibernar, Desterrar, Control mental, Expulsar al mal, Encadenar no-muerto y Asustar bestia.
 - Si hay más de un CC muestra el más fuerte, con espiral de cooldown y cuenta regresiva.
 - Sonido al aparecer la alerta (opcional).
-- Se pueden cambiar el color del borde, la escala y la letra del contador.
+- Se pueden cambiar el color del borde, la escala, la opacidad del fondo y la letra del contador.
 - Alertas movibles, una por miembro del grupo.
 - Funciona en cualquier idioma del cliente.
 
 ## Instalación
 
-1. Descargá este repositorio (**Code → Download ZIP**).
-2. Copiá la carpeta `PartyCCAlert` en `World of Warcraft/Interface/AddOns/`.
+1. Descargá **PartyCCAlert.zip** desde [Releases](https://github.com/nidas-wow-oss/PartyCCAlert/releases/latest).
+2. Descomprimilo en `World of Warcraft/Interface/AddOns/` (queda una carpeta `PartyCCAlert`).
 3. Verificá que **PartyCCAlert** esté activado en la lista de AddOns de la pantalla de personajes.
+
+Si usás **Code → Download ZIP**, renombrá la carpeta de `PartyCCAlert-main` a `PartyCCAlert`.
 
 ## Uso
 
