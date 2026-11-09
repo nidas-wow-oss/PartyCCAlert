@@ -1,0 +1,9 @@
+## Interface: 30300
+## Title: PartyCCAlert
+## Title-esES: PartyCCAlert
+## Notes: Shows a big alert in the middle of the screen when party1 or party2 is crowd-controlled (stun, fear, polymorph, silence...) or an enemy is casting a CC on them, with the CC icon and which party member it is.
+## Notes-esES: Muestra una alerta grande en el centro de la pantalla cuando party1 o party2 esta bajo CC (stun, fear, polimorfia, silencio...) o un enemigo le castea un CC, con el icono del CC y cual miembro del grupo es.
+## Author: Nidhaus
+## Version: 1.0
+## SavedVariables: PartyCCAlertDB
+PartyCCAlert.lua
