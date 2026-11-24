@@ -40,7 +40,44 @@ local DEFAULTS = {
     timerFont = "continuum",
     bgAlpha = 0.55,
     glow = true,
+    soundKey = "raid",
 }
+
+local SOUND_DIR = "Interface\\AddOns\\PartyCCAlert\\Sounds\\"
+local SOUNDS = {
+    { key = "raid", label = "Raid Warning" },
+    { key = "AlarmLong", file = "AlarmLong.ogg" },
+    { key = "AlarmMid", file = "AlarmMid.ogg" },
+    { key = "AlarmShort", file = "AlarmShort.ogg" },
+    { key = "BeepHigh", file = "BeepHigh.mp3" },
+    { key = "BeepLow", file = "BeepLow.mp3" },
+    { key = "ChainLink", file = "ChainLink.ogg" },
+    { key = "ChurchBell", file = "ChurchBell.ogg" },
+    { key = "Duck", file = "Duck.ogg" },
+    { key = "ElectroZap1", file = "ElectroZap1.mp3" },
+    { key = "ElectroZap2", file = "ElectroZap2.mp3" },
+    { key = "Heartbeat", file = "Heartbeat.ogg" },
+    { key = "Message1", file = "Message1.ogg" },
+    { key = "Message2", file = "Message2.ogg" },
+    { key = "Ringtone1", file = "Ringtone1.mp3" },
+    { key = "Ringtone2", file = "Ringtone2.mp3" },
+    { key = "Sparkle", file = "Sparkle.mp3" },
+    { key = "Squish", file = "Squish.ogg" },
+    { key = "WindChime", file = "WindChime.ogg" },
+    { key = "Xylophone", file = "Xylophone.ogg" },
+}
+
+local function SoundIndex()
+    for i, snd in ipairs(SOUNDS) do
+        if snd.key == PartyCCAlertDB.soundKey then return i end
+    end
+    return 1
+end
+
+local function PlayAlertSound()
+    local snd = SOUNDS[SoundIndex()]
+    if snd.file then PlaySoundFile(SOUND_DIR .. snd.file) else PlaySound("RaidWarning") end
+end
 
 local GLOW_BORDER = "Interface\\AddOns\\PartyCCAlert\\Media\\BigBorder"
 
@@ -214,7 +251,7 @@ local function Show(f, icon, duration, expires, casting)
     f:Show()
     f.active = true
     if not wasActive and PartyCCAlertDB.sound then
-        PlaySound("RaidWarning")
+        PlayAlertSound()
     end
 end
 
@@ -297,7 +334,7 @@ ev:SetScript("OnEvent", function(self, event, arg1)
             PartyCCAlertDB.timerFont = nil
             PartyCCAlertDB.fontV2 = true
         end
-        for _, k in ipairs({ "sound", "casts", "silences", "scale", "timerFont", "bgAlpha", "glow" }) do
+        for _, k in ipairs({ "sound", "casts", "silences", "scale", "timerFont", "bgAlpha", "glow", "soundKey" }) do
             if PartyCCAlertDB[k] == nil then PartyCCAlertDB[k] = DEFAULTS[k] end
         end
         if not COLORS[PartyCCAlertDB.color or ""] then PartyCCAlertDB.color = DEFAULT_COLOR end
@@ -418,7 +455,7 @@ end
 
 local function CreateMenu()
     local m = CreateFrame("Frame", "PartyCCAlertMenu", UIParent)
-    m:SetSize(250, 400)
+    m:SetSize(250, 430)
     m:SetPoint("CENTER")
     m:SetFrameStrata("DIALOG")
     m:SetClampedToScreen(true)
@@ -535,11 +572,62 @@ local function CreateMenu()
         FontText()
     end)
 
+    local soundBtn, soundList
+    local function SoundText()
+        local snd = SOUNDS[SoundIndex()]
+        soundBtn:SetLabel("Sound: " .. (snd.label or snd.key) .. "  v", false)
+    end
+    soundBtn = Btn(m, 16, -360, 218, 22, function()
+        if soundList:IsShown() then soundList:Hide() else soundList:Show() end
+    end)
+    soundList = CreateFrame("Frame", nil, m)
+    soundList:SetFrameStrata("FULLSCREEN_DIALOG")
+    soundList:SetPoint("TOPLEFT", soundBtn, "BOTTOMLEFT", 0, -2)
+    soundList:SetWidth(218)
+    soundList:SetHeight(12 + #SOUNDS * 16)
+    soundList:SetClampedToScreen(true)
+    soundList:EnableMouse(true)
+    ApplyBackdrop(soundList, bdPanel, panelBg, panelBorder)
+    local rows = {}
+    for i, snd in ipairs(SOUNDS) do
+        local r = CreateFrame("Button", nil, soundList)
+        r:SetHeight(16)
+        r:SetPoint("TOPLEFT", 6, -6 - (i - 1) * 16)
+        r:SetPoint("RIGHT", soundList, "RIGHT", -6, 0)
+        r:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+        r.check = r:CreateTexture(nil, "OVERLAY")
+        r.check:SetSize(14, 14)
+        r.check:SetPoint("LEFT", 2, 0)
+        r.check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+        local fs = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        fs:SetPoint("LEFT", 20, 0)
+        fs:SetText(snd.label or snd.key)
+        r:SetScript("OnClick", function()
+            PartyCCAlertDB.soundKey = snd.key
+            PlayAlertSound()
+            SoundText()
+            soundList:Hide()
+        end)
+        rows[i] = r
+    end
+    soundList:SetScript("OnShow", function()
+        local cur = SoundIndex()
+        for i, r in ipairs(rows) do if i == cur then r.check:Show() else r.check:Hide() end end
+    end)
+
+    soundList:SetScript("OnUpdate", function(self)
+        if (IsMouseButtonDown("LeftButton") or IsMouseButtonDown("RightButton"))
+           and not self:IsMouseOver() and not soundBtn:IsMouseOver() then
+            self:Hide()
+        end
+    end)
+    soundList:Hide()
+
     local move
     local function MoveText()
         move:SetLabel(unlocked and "Lock" or "Test / Move", unlocked)
     end
-    move = Btn(m, 16, -360, 218, 24, function()
+    move = Btn(m, 16, -390, 218, 24, function()
         SetUnlocked(not unlocked)
         MoveText()
     end)
@@ -567,10 +655,12 @@ local function CreateMenu()
         end)
         RefreshColors()
         FontText()
+        SoundText()
         MoveText()
     end)
 
     m:SetScript("OnHide", function()
+        soundList:Hide()
         if unlocked then SetUnlocked(false) end
     end)
     m:Hide()
