@@ -39,7 +39,10 @@ local DEFAULTS = {
     scale = 1,
     timerFont = "continuum",
     bgAlpha = 0.55,
+    glow = true,
 }
+
+local GLOW_BORDER = "Interface\\AddOns\\PartyCCAlert\\Media\\BigBorder"
 
 local COLORS = {
     celeste = { 0.4, 0.85, 1 },
@@ -91,6 +94,18 @@ local function CreateAlert(unit, label)
     f.border:SetFrameLevel(f.cd:GetFrameLevel() + 2)
     f.border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 3 })
 
+    f.glow = CreateFrame("Frame", nil, f)
+    f.glow:SetPoint("TOPLEFT", f.icon, "TOPLEFT", -7, 7)
+    f.glow:SetPoint("BOTTOMRIGHT", f.icon, "BOTTOMRIGHT", 7, -7)
+    f.glow:SetFrameLevel(f.border:GetFrameLevel() + 1)
+    f.glow:SetBackdrop({ edgeFile = GLOW_BORDER, edgeSize = 12 })
+    f.glow:SetScript("OnUpdate", function(self, dt)
+
+        self.t = (self.t or 0) + dt
+        self:SetAlpha(0.725 + 0.275 * math.sin(self.t * 6.283))
+    end)
+    f.glow:Hide()
+
     f.who = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     f.who:SetPoint("LEFT", f.icon, "RIGHT", 10, 0)
     f.who:SetText(label)
@@ -126,10 +141,17 @@ end
 local function BorderColor(f)
     local c = f.casting and CAST_COLOR or COLORS[PartyCCAlertDB.color] or COLORS[DEFAULT_COLOR]
     f.border:SetBackdropBorderColor(c[1], c[2], c[3], 1)
+    f.glow:SetBackdropBorderColor(c[1], c[2], c[3], 1)
 end
 
 local function ApplyColor()
     for _, f in pairs(alerts) do BorderColor(f) end
+end
+
+local function ApplyGlow()
+    for _, f in pairs(alerts) do
+        if PartyCCAlertDB.glow then f.glow.t = 0; f.glow:Show() else f.glow:Hide() end
+    end
 end
 
 local TIMER_FONTS = {
@@ -275,7 +297,7 @@ ev:SetScript("OnEvent", function(self, event, arg1)
             PartyCCAlertDB.timerFont = nil
             PartyCCAlertDB.fontV2 = true
         end
-        for _, k in ipairs({ "sound", "casts", "silences", "scale", "timerFont", "bgAlpha" }) do
+        for _, k in ipairs({ "sound", "casts", "silences", "scale", "timerFont", "bgAlpha", "glow" }) do
             if PartyCCAlertDB[k] == nil then PartyCCAlertDB[k] = DEFAULTS[k] end
         end
         if not COLORS[PartyCCAlertDB.color or ""] then PartyCCAlertDB.color = DEFAULT_COLOR end
@@ -292,6 +314,7 @@ ev:SetScript("OnEvent", function(self, event, arg1)
         ApplyPosition(alerts.party1)
         ApplyPosition(alerts.party2)
         ApplyColor()
+        ApplyGlow()
         ApplyTimerFont()
         ApplyBgAlpha()
         self:RegisterEvent("UNIT_AURA")
@@ -395,7 +418,7 @@ end
 
 local function CreateMenu()
     local m = CreateFrame("Frame", "PartyCCAlertMenu", UIParent)
-    m:SetSize(250, 376)
+    m:SetSize(250, 400)
     m:SetPoint("CENTER")
     m:SetFrameStrata("DIALOG")
     m:SetClampedToScreen(true)
@@ -431,21 +454,23 @@ local function CreateMenu()
         fs:SetText(WHITE .. label .. R)
         cb:SetScript("OnClick", function(self)
             PartyCCAlertDB[key] = self:GetChecked() and true or false
+            if key == "glow" then ApplyGlow() end
         end)
         checks[key] = cb
     end
     Check("sound", "Sound", -40)
     Check("casts", "Warn incoming CC casts", -64)
     Check("silences", "Show silences", -88)
+    Check("glow", "Glow", -112)
 
-    Separator(m, -120)
-    Header(m, -130, "Border color")
+    Separator(m, -144)
+    Header(m, -154, "Border color")
     local colorBtns = {}
     local function RefreshColors()
         for key, b in pairs(colorBtns) do b:SetLabel(b.label, PartyCCAlertDB.color == key) end
     end
     local function ColorButton(key, label, x)
-        local b = Btn(m, x, -148, 68, 22, function()
+        local b = Btn(m, x, -172, 68, 22, function()
             PartyCCAlertDB.color = key
             ApplyColor()
             RefreshColors()
@@ -457,10 +482,10 @@ local function CreateMenu()
     ColorButton("rojo", "Red", 91)
     ColorButton("agua", "Aqua", 166)
 
-    Separator(m, -182)
+    Separator(m, -206)
 
     local s = CreateFrame("Slider", "PartyCCAlertMenuScale", m, "OptionsSliderTemplate")
-    s:SetPoint("TOPLEFT", 30, -208)
+    s:SetPoint("TOPLEFT", 30, -232)
     s:SetWidth(190)
     s:SetHeight(14)
     s:SetMinMaxValues(0.5, 2)
@@ -480,7 +505,7 @@ local function CreateMenu()
     end
 
     local o = CreateFrame("Slider", "PartyCCAlertMenuAlpha", m, "OptionsSliderTemplate")
-    o:SetPoint("TOPLEFT", 30, -264)
+    o:SetPoint("TOPLEFT", 30, -288)
     o:SetWidth(190)
     o:SetHeight(14)
     o:SetMinMaxValues(0, 1)
@@ -503,7 +528,7 @@ local function CreateMenu()
     local function FontText()
         fontBtn:SetLabel("Timer font: " .. TIMER_FONTS[TimerFontIndex()].label, false)
     end
-    fontBtn = Btn(m, 16, -306, 218, 22, function()
+    fontBtn = Btn(m, 16, -330, 218, 22, function()
         local i = TimerFontIndex() % #TIMER_FONTS + 1
         PartyCCAlertDB.timerFont = TIMER_FONTS[i].key
         ApplyTimerFont()
@@ -514,7 +539,7 @@ local function CreateMenu()
     local function MoveText()
         move:SetLabel(unlocked and "Lock" or "Test / Move", unlocked)
     end
-    move = Btn(m, 16, -336, 218, 24, function()
+    move = Btn(m, 16, -360, 218, 24, function()
         SetUnlocked(not unlocked)
         MoveText()
     end)
